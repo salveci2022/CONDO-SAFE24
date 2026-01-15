@@ -1,9 +1,10 @@
-from flask import Flask, render_template, send_file, jsonify, request
+from flask import Flask, render_template, send_file, jsonify, request, redirect, url_for, session
 import os
 import datetime
 import logging
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'condo-safe24-secret')  # necessário para login da central
 
 # Configuração
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
@@ -35,6 +36,9 @@ def professor():
 
 @app.route('/central')
 def central():
+    expected = (os.environ.get('CENTRAL_PASSWORD') or '').strip()
+    if expected and not session.get('central_auth'):
+        return redirect(url_for('login_central'))
     return render_template('central.html')
 
 @app.route('/painel_publico')
@@ -45,9 +49,17 @@ def painel_publico():
 def admin():
     return render_template('admin.html')
 
-@app.route('/login_central')
+@app.route('/login_central', methods=['GET','POST'])
 def login_central():
-    return render_template('login_central.html')
+    # Se CENTRAL_PASSWORD estiver definido, exige senha; caso contrário, libera.
+    if request.method == 'POST':
+        senha = (request.form.get('senha') or request.form.get('password') or '').strip()
+        expected = (os.environ.get('CENTRAL_PASSWORD') or '').strip()
+        if expected and senha != expected:
+            return render_template('login_central.html', erro='Senha incorreta.')
+        session['central_auth'] = True
+        return redirect(url_for('central'))
+    return render_template('login_central.html', erro=None)
 
 # ========== SISTEMA DE ÁUDIO ==========
 @app.route('/play-alarm')
