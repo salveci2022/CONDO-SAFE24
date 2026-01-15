@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>CONDO-SAFE24 — Acesso restrito</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#ff6a00">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/icon-192.png">
+  <style>
+    body{font-family:Arial,sans-serif;background:#0a0f1a;color:#f1f5f9;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}
+    .card{background:#131a2a;border:1px solid rgba(148,163,184,.22);border-radius:16px;padding:22px;max-width:560px;width:92%}
+    h1{margin:0 0 8px;font-size:22px}
+    p{margin:0 0 14px;color:#cbd5e1;font-size:13px;line-height:1.45}
+    code{background:#0a0f1a;border:1px solid rgba(148,163,184,.22);padding:6px 8px;border-radius:10px;display:inline-block}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔒 Acesso restrito</h1>
+    <p>{{ msg or 'Este painel exige o link oficial com chave do condomínio.' }}</p>
+    <p>Exemplo de link válido:</p>
+    <p><code>{{ request.host_url }}sos?key=SUA-CHAVE-AQUI</code></p>
+  </div>
+</body>
+</html>

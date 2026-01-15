@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>CONDO-SAFE24 — Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#ff6a00">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/icon-192.png">
+  <style>
+    body{font-family:Arial,sans-serif;background:#0a0f1a;color:#f1f5f9;display:flex;justify-content:center;align-items:center;height:100vh;margin:0}
+    .card{background:#131a2a;border:1px solid rgba(148,163,184,.22);border-radius:16px;padding:22px;max-width:420px;width:92%}
+    h1{margin:0 0 8px;font-size:22px}
+    p{margin:0 0 14px;color:#cbd5e1;font-size:13px}
+    input{width:100%;padding:12px;border-radius:12px;border:1px solid rgba(148,163,184,.25);background:#0a0f1a;color:#fff;outline:none}
+    button{width:100%;margin-top:12px;padding:12px;border:0;border-radius:12px;font-weight:800;cursor:pointer;background:#ff6a00;color:#0b1020}
+    .err{margin-top:10px;color:#fecaca;font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🔒 Admin CONDO-SAFE24</h1>
+    <p>Área restrita do síndico/administrador.</p>
+    <form method="post">
+      <input name="senha" type="password" placeholder="Senha do Admin" required>
+      <button type="submit">Entrar</button>
+      {% if erro %}<div class="err">❌ {{ erro }}</div>{% endif %}
+    </form>
+  </div>
+</body>
+</html>

@@ -3,6 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>CONDO-SAFE24 - Área Administrativa</title>
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#ff6a00">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/static/icons/icon-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
     <style>
         :root {
             --premium-blue: #0066ff;
@@ -243,6 +250,77 @@
                     <div class="feature-text">Segurança</div>
                 </div>
             </div>
+
+            <div style="text-align:left; margin-top:24px; padding:16px; border:1px solid rgba(148,163,184,.22); border-radius:16px; background: rgba(19,26,42,.55);">
+                <div style="font-weight:800; margin-bottom:6px;">🔑 Gestão de Chaves (por condomínio)</div>
+                <div style="color:#cbd5e1; font-size:13px; margin-bottom:12px; line-height:1.45;">
+                    Gere uma chave por cliente e compartilhe apenas o link com a chave (ex.: <code style="background:rgba(0,0,0,.25);padding:2px 6px;border-radius:8px;">/sos?key=...</code>).
+                </div>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px;">
+                    <input id="keyName" placeholder="Nome do condomínio" style="flex:1; min-width:180px; padding:10px 12px; border-radius:12px; border:1px solid rgba(148,163,184,.25); background: rgba(10,15,26,.6); color:#fff; outline:none;">
+                    <button onclick="createKey()" style="padding:10px 14px; border:0; border-radius:12px; font-weight:900; cursor:pointer; background:#ff6a00; color:#0b1020;">Gerar chave</button>
+                    <a href="/logout_admin" style="padding:10px 14px; border:1px solid rgba(148,163,184,.22); border-radius:12px; font-weight:800; color:#e2e8f0; text-decoration:none;">Sair (Admin)</a>
+                </div>
+
+                <div id="keysBox" style="font-size:13px; color:#e2e8f0;">Carregando chaves...</div>
+            </div>
+
+            <script>
+              async function loadKeys(){
+                const r = await fetch('/api/keys');
+                const d = await r.json();
+                if(!d.ok){
+                  document.getElementById('keysBox').innerHTML = '❌ Não autorizado ou erro ao carregar.';
+                  return;
+                }
+                const keys = d.keys || {};
+                const rows = Object.entries(keys).map(([k,info])=>{
+                  const name = (info && info.name) ? info.name : String(info);
+                  const active = !(info && info.active === false);
+                  const link = `${window.location.origin}/sos?key=${encodeURIComponent(k)}`;
+                  return `
+                    <div style="padding:10px 12px; border:1px solid rgba(148,163,184,.18); border-radius:12px; margin-bottom:10px; background: rgba(2,6,23,.35);">
+                      <div style="display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;">
+                        <div>
+                          <div style="font-weight:900;">${name} ${active ? '' : '<span style="color:#fecaca;">(desativado)</span>'}</div>
+                          <div style="color:#cbd5e1; font-size:12px; margin-top:4px;">Chave: <b>${k}</b></div>
+                          <div style="color:#cbd5e1; font-size:12px; margin-top:4px;">Link: <a href="${link}" target="_blank" style="color:#00ffcc;">Abrir SOS</a></div>
+                        </div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                          <button onclick="toggleKey('${k}', ${!active})" style="padding:8px 10px; border:1px solid rgba(148,163,184,.22); border-radius:12px; background: rgba(255,255,255,.06); color:#e2e8f0; font-weight:800; cursor:pointer;">${active ? 'Desativar' : 'Ativar'}</button>
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                }).join('');
+                document.getElementById('keysBox').innerHTML = rows || 'Nenhuma chave cadastrada.';
+              }
+
+              async function createKey(){
+                const name = (document.getElementById('keyName').value || '').trim() || 'Condomínio';
+                const r = await fetch('/api/keys', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({name})});
+                const d = await r.json();
+                if(d.ok){
+                  document.getElementById('keyName').value = '';
+                  await loadKeys();
+                } else {
+                  alert('Erro ao gerar chave: ' + (d.error||''));
+                }
+              }
+
+              async function toggleKey(key, active){
+                const r = await fetch('/api/keys/toggle', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({key, active})});
+                const d = await r.json();
+                if(d.ok){
+                  await loadKeys();
+                } else {
+                  alert('Erro: ' + (d.error||''));
+                }
+              }
+
+              loadKeys();
+            </script>
 
             <a href="/" class="btn-admin">
                 🏠 Voltar ao Início

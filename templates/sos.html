@@ -4,6 +4,12 @@
   <meta charset="UTF-8">
   <title>CONDO-SAFE24 — Botão de Pânico</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#ff6a00">
+  <link rel="icon" type="image/png" sizes="192x192" href="/static/icons/icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/static/icons/icon-512.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
   <style>
     :root{
       --premium-blue:#0066ff; --electric-orange:#ff6a00; --deep-purple:#7b42f6;
@@ -129,7 +135,7 @@
     <div class="top">
       <div class="brand">
         <h1>CONDO-SAFE24</h1>
-        <p>Botão de Pânico • Resposta rápida para condomínios</p>
+        <p>Botão de Pânico • {{ client_name }}</p>
       </div>
       <div class="chip">Sem app • 1 clique • Registro</div>
     </div>
@@ -211,6 +217,8 @@
   </div>
 
 <script>
+  const CLIENT_KEY = "{{ session.get('client_key','') }}";
+
 function showStatus(msg, ok=true){
   const el = document.getElementById('status');
   el.style.display = 'block';
@@ -378,8 +386,8 @@ async function enviarAlerta(){
   try{
     const res = await fetch('/api/alert', {
       method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ caller, type, description, contact, lat, lng, accuracy })
+      headers:{'Content-Type':'application/json', 'X-CLIENT-KEY': CLIENT_KEY},
+      body: JSON.stringify({ key: CLIENT_KEY, caller, type, description, contact, lat, lng, accuracy })
     });
     const data = await res.json();
     if(data && data.ok){
