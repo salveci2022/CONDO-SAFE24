@@ -386,16 +386,18 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Morador(a)</th>
-                            <th>Local / Local</th>
+                            <th>Solicitante</th>
+                            <th>Local</th>
+                            <th>Tipo</th>
                             <th>Detalhes</th>
-                            <th>Data / Hora</th>
+                            <th>Data/Hora</th>
                             <th>Status</th>
+                            <th>GPS</th>
                         </tr>
                     </thead>
                     <tbody id="alertsBody">
                         <tr>
-                            <td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">
+                            <td colspan="8" style="text-align:center; padding:30px; color:#94a3b8;">
                                 Carregando alertas...
                             </td>
                         </tr>
@@ -463,13 +465,16 @@
         const tbody = document.getElementById('alertsBody');
         
         if (!alerts || alerts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">Nenhum alerta registrado ainda...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#94a3b8;">Nenhum alerta registrado ainda...</td></tr>';
             return;
         }
 
         tbody.innerHTML = '';
         alerts.forEach((a, idx) => {
             const tr = document.createElement('tr');
+            const gpsLink = (a.lat && a.lng)
+              ? `<a href="https://www.google.com/maps?q=${a.lat},${a.lng}" target="_blank" style="color:var(--vibrant-cyan); text-decoration:none; font-weight:700;">Abrir mapa</a><br><small style="color:#94a3b8">±${Math.round(a.accuracy||0)}m</small>`
+              : '—';
             tr.innerHTML = `
                 <td>${idx + 1}</td>
                 <td>${a.caller || '—'}</td>
@@ -478,6 +483,7 @@
                 <td>${a.description || '—'}</td>
                 <td>${a.ts || '—'}</td>
                 <td>${a.resolved ? '<span class="badge-resolvido">Resolvido</span>' : '<span class="badge-ativo">Ativo</span>'}</td>
+                <td>${gpsLink}</td>
             `;
             tbody.appendChild(tr);
         });

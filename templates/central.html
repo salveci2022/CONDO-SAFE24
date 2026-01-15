@@ -584,7 +584,7 @@
                     <div id="lastUpdate"></div>
 
                     <audio id="sirenAudio" loop>
-                        <source src="/static/siren.wav" type="audio/wav">
+                        <source src="/static/siren.wav.mp3" type="audio/mpeg">
                     </audio>
 
                     <hr>
@@ -608,16 +608,18 @@
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Morador(a)</th>
-                                    <th>Local / Local</th>
+                                    <th>Solicitante</th>
+                                    <th>Local</th>
+                                    <th>Tipo</th>
                                     <th>Detalhes</th>
-                                    <th>Data / Hora</th>
+                                    <th>Data/Hora</th>
                                     <th>Status</th>
+                                    <th>GPS</th>
                                 </tr>
                             </thead>
                             <tbody id="alertsBody">
                                 <tr>
-                                    <td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">
+                                    <td colspan="8" style="text-align:center; padding:30px; color:#94a3b8;">
                                         Nenhum alerta recebido ainda...
                                     </td>
                                 </tr>
@@ -647,11 +649,12 @@
         const tbody = document.getElementById('alertsBody');
         tbody.innerHTML = '';
         if (!alerts || alerts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:30px; color:#94a3b8;">Nenhum alerta recebido ainda...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#94a3b8;">Nenhum alerta recebido ainda...</td></tr>';
             return;
         }
         alerts.forEach((a, idx) => {
             const tr = document.createElement('tr');
+            const gpsLink = (a.lat && a.lng) ? `<a href="https://www.google.com/maps?q=${a.lat},${a.lng}" target="_blank" style="color:var(--vibrant-cyan); text-decoration:none; font-weight:700;">Abrir mapa</a><br><small style="color:#94a3b8">±${Math.round(a.accuracy||0)}m</small>` : '—';
             tr.innerHTML = `
                 <td>${idx + 1}</td>
                 <td>${a.caller || '—'}</td>
@@ -660,6 +663,7 @@
                 <td>${a.description || '—'}</td>
                 <td>${a.ts || '—'}</td>
                 <td>${a.resolved ? '<span class="badge-resolvido">Resolvido</span>' : '<span class="badge-ativo">Ativo</span>'}</td>
+                <td>${gpsLink}</td>
             `;
             tbody.appendChild(tr);
         });
@@ -758,6 +762,27 @@
 
     // INICIALIZAR
     loadSchoolData();
+
+    // "Desbloqueio" de áudio: alguns navegadores só liberam som após uma ação do usuário.
+    // Aqui, o primeiro clique/toque na página libera o áudio da sirene.
+    (function enableAudioOnFirstGesture(){
+        const audio = document.getElementById('sirenAudio');
+        let unlocked = false;
+        async function unlock(){
+            if (unlocked) return;
+            try {
+                audio.volume = 1;
+                await audio.play();
+                audio.pause();
+                audio.currentTime = 0;
+                unlocked = true;
+            } catch(e) {
+                // se falhar, tenta de novo no próximo clique
+            }
+        }
+        window.addEventListener('click', unlock, { once:false });
+        window.addEventListener('touchstart', unlock, { once:false });
+    })();
     setInterval(updateClock,1000);
     updateClock();
     setInterval(atualizar, 5000);

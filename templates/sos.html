@@ -178,19 +178,24 @@
       <label for="description">Detalhes (o que está acontecendo?)</label>
       <textarea id="description" placeholder="Descreva rapidamente a situação para a portaria agir melhor."></textarea>
 
+      <!-- GPS (opcional) -->
+      <div class="actions-row" style="margin-top:14px">
+        <button class="btn" onclick="usarGPS()" id="gpsBtn">📍 Usar GPS (opcional)</button>
+        <span id="gpsInfo" style="font-size:12px; color:#cbd5e1"></span>
+      </div>
+      <input type="hidden" id="lat" />
+      <input type="hidden" id="lng" />
+      <input type="hidden" id="accuracy" />
+
       <div class="sos-center">
-  <button id="sosBtn" class="sos-round" onclick="enviarAlerta()" aria-label="Acionar SOS">
-    <div class="icon">🚨</div>
-    <small id="sosTxt">ACIONAR SOS</small>
-  </button>
-</div>
-
-<div class="actions-row">
-  <button class="btn" onclick="limpar()">Limpar</button>
-</div>
-
+        <button id="sosBtn" class="sos-round" onclick="enviarAlerta()" aria-label="Acionar SOS">
+          <div class="icon">🚨</div>
           <small id="sosTxt">ACIONAR SOS</small>
         </button>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn" onclick="limpar()">Limpar</button>
       </div>
 
       <div id="status" class="status"></div>
@@ -221,6 +226,41 @@ function limpar(){
   });
   const el = document.getElementById('status');
   el.style.display='none';
+
+  // limpa GPS
+  document.getElementById('lat').value='';
+  document.getElementById('lng').value='';
+  document.getElementById('accuracy').value='';
+  document.getElementById('gpsInfo').textContent='';
+}
+
+// GPS (opcional) – pega localização exata do celular (se o usuário permitir)
+function usarGPS(){
+  const info = document.getElementById('gpsInfo');
+  const btn = document.getElementById('gpsBtn');
+  if (!navigator.geolocation){
+    info.textContent = 'GPS não disponível neste navegador.';
+    return;
+  }
+  info.textContent = 'Capturando GPS...'
+  if(btn) btn.disabled = true;
+  navigator.geolocation.getCurrentPosition(
+    (pos)=>{
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const acc = pos.coords.accuracy;
+      document.getElementById('lat').value = lat;
+      document.getElementById('lng').value = lng;
+      document.getElementById('accuracy').value = acc;
+      info.textContent = `GPS ok: ${lat.toFixed(6)}, ${lng.toFixed(6)} (±${Math.round(acc)}m)`;
+      if(btn) btn.disabled = false;
+    },
+    (err)=>{
+      info.textContent = 'Não foi possível obter GPS. Permita a localização no navegador.';
+      if(btn) btn.disabled = false;
+    },
+    { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
+  );
 }
 
 // Ocorrências pré-selecionadas: clicar nos "chips" já define o tipo
@@ -246,6 +286,9 @@ async function enviarAlerta(){
   const type = document.getElementById('type').value.trim();
   const description = document.getElementById('description').value.trim();
   const contact = document.getElementById('contact').value.trim();
+  const lat = document.getElementById('lat').value || null;
+  const lng = document.getElementById('lng').value || null;
+  const accuracy = document.getElementById('accuracy').value || null;
 
   if(!location || !type){
     showStatus("Preencha pelo menos o LOCAL e o TIPO de ocorrência.", false);
@@ -264,7 +307,7 @@ async function enviarAlerta(){
     const res = await fetch('/api/alert', {
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ caller, location, type, description, contact })
+      body: JSON.stringify({ caller, location, type, description, contact, lat, lng, accuracy })
     });
     const data = await res.json();
     if(data && data.ok){

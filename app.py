@@ -2,9 +2,16 @@ from flask import Flask, render_template, send_file, jsonify, request, redirect,
 import os
 import datetime
 import logging
+from io import BytesIO
+from zoneinfo import ZoneInfo
+
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'condo-safe24-secret')  # necessário para login da central
+
+TZ = ZoneInfo(os.environ.get('APP_TZ', 'America/Sao_Paulo'))
 
 # Configuração
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
@@ -65,14 +72,14 @@ def login_central():
 @app.route('/play-alarm')
 def play_alarm():
     try:
-        return send_file('static/siren.wav')
+        return send_file('static/siren.wav.mp3')
     except FileNotFoundError:
         return "Arquivo de áudio não encontrado", 404
 
 @app.route('/tocar_sirene')
 def tocar_sirene():
     try:
-        return send_file('static/siren.wav')
+        return send_file('static/siren.wav.mp3')
     except Exception as e:
         return f"Erro ao carregar sirene: {str(e)}", 500
 
@@ -91,6 +98,11 @@ def receber_alerta():
         occ_type = (data.get('type') or data.get('occ_type') or 'Ocorrência')
         description = (data.get('description') or 'Sem descrição')
         contact = (data.get('contact') or '')
+        lat = data.get('lat')
+        lng = data.get('lng')
+        accuracy = data.get('accuracy')
+
+        now = datetime.datetime.now(TZ)
 
         novo_alerta = {
             'id': len(alertas) + 1,
@@ -99,9 +111,12 @@ def receber_alerta():
             'type': occ_type,
             'description': description,
             'contact': contact,
-            'timestamp': datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+            'timestamp': now.strftime('%d/%m/%Y %H:%M:%S'),
             'resolved': False,
-            'ts': datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S')
+            'ts': now.strftime('%d/%m/%Y %H:%M:%S'),
+            'lat': lat,
+            'lng': lng,
+            'accuracy': accuracy,
         }
 
         alertas.insert(0, novo_alerta)
@@ -147,7 +162,7 @@ def controlar_sirene():
         elif action == 'mute':
             sistema_status['mutado'] = True
             
-        sistema_status['ultima_atualizacao'] = datetime.datetime.now().isoformat()
+        sistema_status['ultima_atualizacao'] = datetime.datetime.now(TZ).isoformat()
         
         return jsonify({'ok': True, 'siren': sistema_status['sirene_ativa'], 'muted': sistema_status['mutado']})
         
@@ -167,7 +182,7 @@ def resolver_alerta():
         if not alertas_ativos:
             sistema_status['sirene_ativa'] = False
             
-        sistema_status['ultima_atualizacao'] = datetime.datetime.now().isoformat()
+        sistema_status['ultima_atualizacao'] = datetime.datetime.now(TZ).isoformat()
         
         return jsonify({'ok': True})
         
@@ -180,7 +195,7 @@ def limpar_alertas():
     try:
         alertas.clear()
         sistema_status['sirene_ativa'] = False
-        sistema_status['ultima_atualizacao'] = datetime.datetime.now().isoformat()
+        sistema_status['ultima_atualizacao'] = datetime.datetime.now(TZ).isoformat()
         
         return jsonify({'ok': True})
         
@@ -191,19 +206,20 @@ def limpar_alertas():
 @app.route('/acionar_alerta', methods=['POST'])
 def acionar_alerta():
     try:
+        now = datetime.datetime.now(TZ)
         novo_alerta = {
             'id': len(alertas) + 1,
             'teacher': 'Morador',
             'room': 'Local não informado',
             'description': 'Alerta de pânico acionado',
-            'timestamp': datetime.datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+            'timestamp': now.strftime('%d/%m/%Y %H:%M:%S'),
             'resolved': False,
-            'ts': datetime.datetime.now().strftime('%H:%M:%S')
+            'ts': now.strftime('%H:%M:%S')
         }
         
         alertas.append(novo_alerta)
         sistema_status['sirene_ativa'] = True
-        sistema_status['ultima_atualizacao'] = datetime.datetime.now().isoformat()
+        sistema_status['ultima_atualizacao'] = datetime.datetime.now(TZ).isoformat()
         
         return jsonify({
             'success': True,
@@ -221,6 +237,52 @@ def acionar_alerta():
 @app.route('/health')
 def health_check():
     return jsonify({'status': 'healthy'})
+
+
+@app.route('/report.pdf')
+def report_pdf():
+    """Gera um PDF simples com o histórico de alertas (compatível com o botão da Central)."""
+    buf = BytesIO()
+    c = canvas.Canvas(buf, pagesize=A4)
+    width, height = A4
+
+    now = datetime.datetime.now(TZ)
+    y = height - 50
+    c.setFont("Helvetica-Bold", 16)
+    c.drawString(40, y, "CONDO-SAFE24 – Relatório de Alertas")
+    y -= 18
+    c.setFont("Helvetica", 10)
+    c.drawString(40, y, f"Gerado em: {now.strftime('%d/%m/%Y %H:%M:%S')}")
+    y -= 25
+
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(40, y, "ID")
+    c.drawString(70, y, "Data/Hora")
+    c.drawString(170, y, "Tipo")
+    c.drawString(300, y, "Local")
+    c.drawString(510, y, "Status")
+    y -= 12
+    c.line(40, y, width - 40, y)
+    y -= 14
+
+    c.setFont("Helvetica", 9)
+    for a in alertas[:120]:
+        if y < 60:
+            c.showPage()
+            y = height - 50
+            c.setFont("Helvetica", 9)
+
+        status = "Atendido" if a.get('resolved') else "Pendente"
+        c.drawString(40, y, str(a.get('id', '')))
+        c.drawString(70, y, (a.get('timestamp') or '')[:19])
+        c.drawString(170, y, (a.get('type') or '')[:20])
+        c.drawString(300, y, (a.get('location') or '')[:35])
+        c.drawString(510, y, status)
+        y -= 14
+
+    c.save()
+    buf.seek(0)
+    return send_file(buf, mimetype='application/pdf', as_attachment=False, download_name='condo-safe24-relatorio.pdf')
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
