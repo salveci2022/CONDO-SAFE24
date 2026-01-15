@@ -178,10 +178,9 @@
       <label for="description">Detalhes (o que está acontecendo?)</label>
       <textarea id="description" placeholder="Descreva rapidamente a situação para a portaria agir melhor."></textarea>
 
-      <!-- GPS (opcional) -->
+      <!-- GPS automático (híbrido): inicia ao escolher a ocorrência / ao tocar no SOS -->
       <div class="actions-row" style="margin-top:14px">
-        <button class="btn" onclick="usarGPS()" id="gpsBtn">📍 Usar GPS (opcional)</button>
-        <span id="gpsInfo" style="font-size:12px; color:#cbd5e1"></span>
+        <span id="gpsInfo" style="font-size:12px; color:#cbd5e1">📍 Localização: preparando…</span>
       </div>
       <input type="hidden" id="lat" />
       <input type="hidden" id="lng" />
@@ -231,36 +230,61 @@ function limpar(){
   document.getElementById('lat').value='';
   document.getElementById('lng').value='';
   document.getElementById('accuracy').value='';
-  document.getElementById('gpsInfo').textContent='';
+  document.getElementById('gpsInfo').textContent='📍 Localização: preparando…';
+  if (typeof gpsPromise !== 'undefined') gpsPromise = null;
 }
 
-// GPS (opcional) – pega localização exata do celular (se o usuário permitir)
-function usarGPS(){
+// GPS automático (híbrido)
+let gpsPromise = null;
+
+function requestGPS(triggerLabel){
   const info = document.getElementById('gpsInfo');
-  const btn = document.getElementById('gpsBtn');
   if (!navigator.geolocation){
-    info.textContent = 'GPS não disponível neste navegador.';
-    return;
+    if(info) info.textContent = '📍 Localização: indisponível neste navegador.';
+    return Promise.resolve(null);
   }
-  info.textContent = 'Capturando GPS...'
-  if(btn) btn.disabled = true;
-  navigator.geolocation.getCurrentPosition(
-    (pos)=>{
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const acc = pos.coords.accuracy;
-      document.getElementById('lat').value = lat;
-      document.getElementById('lng').value = lng;
-      document.getElementById('accuracy').value = acc;
-      info.textContent = `GPS ok: ${lat.toFixed(6)}, ${lng.toFixed(6)} (±${Math.round(acc)}m)`;
-      if(btn) btn.disabled = false;
-    },
-    (err)=>{
-      info.textContent = 'Não foi possível obter GPS. Permita a localização no navegador.';
-      if(btn) btn.disabled = false;
-    },
-    { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
-  );
+  // se já temos coordenadas, não refaz
+  const latEl = document.getElementById('lat');
+  const lngEl = document.getElementById('lng');
+  const accEl = document.getElementById('accuracy');
+  if(latEl.value && lngEl.value){
+    if(info) info.textContent = `📍 Localização: OK (±${Math.round(floatOr(accEl.value,0))}m)`;
+    return Promise.resolve({lat: latEl.value, lng: lngEl.value, accuracy: accEl.value});
+  }
+  // evita múltiplas chamadas em paralelo
+  if(gpsPromise) return gpsPromise;
+
+  if(info) info.textContent = '📍 Localização: capturando…';
+
+  gpsPromise = new Promise((resolve)=>{
+    navigator.geolocation.getCurrentPosition(
+      (pos)=>{
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        const acc = pos.coords.accuracy;
+        latEl.value = lat;
+        lngEl.value = lng;
+        accEl.value = acc;
+        if(info) info.textContent = `📍 Localização: OK (±${Math.round(acc)}m)`;
+        gpsPromise = null;
+        resolve({lat, lng, accuracy: acc});
+      },
+      (err)=>{
+        // usuário negou ou falhou
+        if(info) info.textContent = '📍 Localização: não permitida ou indisponível.';
+        gpsPromise = null;
+        resolve(null);
+      },
+      { enableHighAccuracy:true, timeout:8000, maximumAge:0 }
+    );
+  });
+
+  return gpsPromise;
+}
+
+function floatOr(v, d=0){
+  const n = parseFloat(v);
+  return Number.isFinite(n) ? n : d
 }
 
 // Ocorrências pré-selecionadas: clicar nos "chips" já define o tipo
@@ -275,6 +299,8 @@ function usarGPS(){
     select.value = v;
     wrap.querySelectorAll('.type-pill').forEach(p=>p.classList.remove('active'));
     pill.classList.add('active');
+    // ao escolher ocorrência, já tenta capturar GPS automaticamente
+    requestGPS('type');
   });
 })();
 
@@ -286,6 +312,12 @@ async function enviarAlerta(){
   const type = document.getElementById('type').value.trim();
   const description = document.getElementById('description').value.trim();
   const contact = document.getElementById('contact').value.trim();
+  // Se ainda não capturou GPS, tenta automaticamente (sem travar a pessoa)
+  if(!document.getElementById('lat').value || !document.getElementById('lng').value){
+    // espera até 1500ms para tentar pegar (se demorar, envia mesmo assim)
+    await Promise.race([requestGPS('send'), new Promise(r=>setTimeout(()=>r(null), 1500))]);
+  }
+
   const lat = document.getElementById('lat').value || null;
   const lng = document.getElementById('lng').value || null;
   const accuracy = document.getElementById('accuracy').value || null;
