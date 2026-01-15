@@ -609,7 +609,6 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Solicitante</th>
-                                    <th>Local</th>
                                     <th>Tipo</th>
                                     <th>Detalhes</th>
                                     <th>Data/Hora</th>
@@ -619,7 +618,7 @@
                             </thead>
                             <tbody id="alertsBody">
                                 <tr>
-                                    <td colspan="8" style="text-align:center; padding:30px; color:#94a3b8;">
+                                    <td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">
                                         Nenhum alerta recebido ainda...
                                     </td>
                                 </tr>
@@ -649,7 +648,7 @@
         const tbody = document.getElementById('alertsBody');
         tbody.innerHTML = '';
         if (!alerts || alerts.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding:30px; color:#94a3b8;">Nenhum alerta recebido ainda...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; padding:30px; color:#94a3b8;">Nenhum alerta recebido ainda...</td></tr>';
             return;
         }
         alerts.forEach((a, idx) => {
@@ -658,7 +657,6 @@
             tr.innerHTML = `
                 <td>${idx + 1}</td>
                 <td>${a.caller || '—'}</td>
-                <td>${a.location || '—'}</td>
                 <td>${a.type || '—'}</td>
                 <td>${a.description || '—'}</td>
                 <td>${a.ts || '—'}</td>

@@ -68,6 +68,13 @@ def login_central():
         return redirect(url_for('central'))
     return render_template('login_central.html', erro=None)
 
+
+@app.route('/logout_central')
+def logout_central():
+    """Encerra a sessão da Central e volta para a tela de login."""
+    session.pop('central_auth', None)
+    return redirect(url_for('login_central'))
+
 # ========== SISTEMA DE ÁUDIO ==========
 @app.route('/play-alarm')
 def play_alarm():
@@ -94,13 +101,18 @@ def receber_alerta():
 
         # Compatibilidade (projetos antigos): teacher/room continuam aceitos
         caller = (data.get('caller') or data.get('teacher') or '—')
-        location = (data.get('location') or data.get('room') or 'Local não informado')
+        # No CONDO-SAFE24 a localização principal é o MAPA (GPS). Mantemos este campo apenas por compatibilidade.
+        location = (data.get('location') or data.get('room') or '')
         occ_type = (data.get('type') or data.get('occ_type') or 'Ocorrência')
         description = (data.get('description') or 'Sem descrição')
         contact = (data.get('contact') or '')
         lat = data.get('lat')
         lng = data.get('lng')
         accuracy = data.get('accuracy')
+
+        maps_url = None
+        if lat is not None and lng is not None and str(lat) != '' and str(lng) != '':
+            maps_url = f"https://www.google.com/maps?q={lat},{lng}"
 
         now = datetime.datetime.now(TZ)
 
@@ -117,6 +129,7 @@ def receber_alerta():
             'lat': lat,
             'lng': lng,
             'accuracy': accuracy,
+            'maps_url': maps_url,
         }
 
         alertas.insert(0, novo_alerta)
@@ -259,7 +272,8 @@ def report_pdf():
     c.drawString(40, y, "ID")
     c.drawString(70, y, "Data/Hora")
     c.drawString(170, y, "Tipo")
-    c.drawString(300, y, "Local")
+    c.drawString(300, y, "GPS")
+    c.drawString(420, y, "Mapa")
     c.drawString(510, y, "Status")
     y -= 12
     c.line(40, y, width - 40, y)
@@ -276,7 +290,32 @@ def report_pdf():
         c.drawString(40, y, str(a.get('id', '')))
         c.drawString(70, y, (a.get('timestamp') or '')[:19])
         c.drawString(170, y, (a.get('type') or '')[:20])
-        c.drawString(300, y, (a.get('location') or '')[:35])
+
+        lat = a.get('lat')
+        lng = a.get('lng')
+        acc = a.get('accuracy')
+        gps_txt = '—'
+        if lat is not None and lng is not None and str(lat) != '' and str(lng) != '':
+            try:
+                gps_txt = f"{float(lat):.6f}, {float(lng):.6f}"
+            except Exception:
+                gps_txt = f"{lat}, {lng}"
+            if acc not in (None, '', 0, '0'):
+                try:
+                    gps_txt += f" (±{int(float(acc))}m)"
+                except Exception:
+                    pass
+        c.drawString(300, y, gps_txt[:22])
+
+        maps_url = a.get('maps_url')
+        if maps_url:
+            c.setFillColorRGB(0, 0.6, 0.8)
+            c.drawString(420, y, "Abrir")
+            c.linkURL(maps_url, (420, y-2, 455, y+10), relative=0)
+            c.setFillColorRGB(0, 0, 0)
+        else:
+            c.drawString(420, y, "—")
+
         c.drawString(510, y, status)
         y -= 14
 
