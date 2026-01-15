@@ -1,6 +1,13 @@
-MIT License
 
-Copyright (c) 2026 SALVECI DOS SANYOS 
+### **4. 🛠️ COMANDOS GIT PARA SUBIR O CÓDIGO**
+
+```bash
+# No terminal, na pasta do projeto:
+git add .
+git commit -m "🎉 Initial commit: SPYNET Security base structure"
+git push origin mainMIT License
+
+Copyright (c) 2025 SALVECI DOS SANYOS 
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

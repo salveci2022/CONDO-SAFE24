@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>CONDO-SAFE24 - Acesso Administrativo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --premium-blue: #0066ff;
+            --electric-orange: #ff6a00;
+            --deep-purple: #7b42f6;
+            --vibrant-cyan: #00ffcc;
+            --premium-black: #0a0f1a;
+            --dark-card: #131a2a;
+        }
+        
+        * { box-sizing:border-box; margin:0; padding:0; }
+        
+        body {
+            margin:0;
+            min-height:100vh;
+            font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--premium-black) 0%, #0f172a 50%, #1e293b 100%);
+            color:#f1f5f9;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top:0; left:0;
+            width:100%; height:100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(0, 102, 255, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 80% 70%, rgba(255, 106, 0, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(123, 66, 246, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+            animation: float 15s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(1deg); }
+        }
+
+        .login-shell {
+            width:100%;
+            max-width:480px;
+            padding:30px 25px;
+        }
+
+        .login-card {
+            background: rgba(10, 15, 26, 0.9);
+            border-radius:24px;
+            padding:40px 35px 35px;
+            border: 1px solid rgba(0, 102, 255, 0.3);
+            box-shadow: 
+                0 25px 50px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.05),
+                inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--premium-blue), var(--electric-orange), var(--vibrant-cyan));
+        }
+
+        .brand-premium {
+            display:flex;
+            align-items:center;
+            gap:15px;
+            margin-bottom:30px;
+            justify-content: center;
+        }
+
+        .brand-icon-premium {
+            width:50px;
+            height:50px;
+            border-radius:12px;
+            background: linear-gradient(135deg, var(--premium-blue), var(--deep-purple));
+            box-shadow: 0 0 30px rgba(0, 102, 255, 0.6);
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            font-size:18px;
+            font-weight:bold;
+            color:white;
+        }
+
+        .brand-text-premium {
+            font-size:32px;
+            font-weight:800;
+            background: linear-gradient(135deg, var(--premium-blue), var(--vibrant-cyan));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing:2px;
+        }
+
+        .brand-sub-premium {
+            font-size:14px;
+            color:#94a3b8;
+            text-align: center;
+            margin-top: -5px;
+            margin-bottom: 25px;
+            letter-spacing:1px;
+        }
+
+        .login-title {
+            font-size:24px;
+            font-weight:700;
+            color:white;
+            margin-bottom:8px;
+            text-align: center;
+            letter-spacing:0.5px;
+        }
+
+        .login-subtitle {
+            font-size:14px;
+            color:#94a3b8;
+            margin-bottom:30px;
+            text-align: center;
+            line-height:1.5;
+        }
+
+        label {
+            display:block;
+            font-size:14px;
+            margin-bottom:8px;
+            color:#e2e8f0;
+            font-weight:500;
+        }
+
+        input {
+            width:100%;
+            padding:14px 16px;
+            border-radius:12px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid rgba(0, 102, 255, 0.3);
+            color:#f1f5f9;
+            font-size:15px;
+            margin-bottom:20px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            outline:none;
+            border-color: var(--premium-blue);
+            box-shadow: 0 0 0 2px rgba(0, 102, 255, 0.3);
+            background: rgba(15, 23, 42, 0.8);
+        }
+
+        input::placeholder {
+            color:#64748b;
+        }
+
+        .btn-login {
+            display:inline-flex;
+            justify-content:center;
+            align-items:center;
+            padding:14px 28px;
+            border-radius:15px;
+            border:none;
+            cursor:pointer;
+            font-weight:600;
+            font-size:15px;
+            color:white;
+            background: linear-gradient(135deg, var(--premium-blue), var(--deep-purple));
+            box-shadow: 
+                0 10px 25px rgba(0, 102, 255, 0.4),
+                0 0 20px rgba(123, 66, 246, 0.3);
+            transition: all 0.3s ease;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-login::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .btn-login:hover::before {
+            left: 100%;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 15px 35px rgba(0, 102, 255, 0.6),
+                0 0 30px rgba(123, 66, 246, 0.5);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #475569, #64748b);
+            margin-left:12px;
+            padding:12px 24px;
+            font-size:14px;
+        }
+
+        .btn-row {
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-top:25px;
+        }
+
+        .clock-premium {
+            font-size:14px;
+            color: var(--electric-orange);
+            font-weight:600;
+        }
+
+        .error-premium {
+            font-size:14px;
+            color: #ff6b6b;
+            margin-top:12px;
+            padding:12px;
+            border-radius:10px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            text-align: center;
+            font-weight:500;
+        }
+
+        .helper-premium {
+            margin-top:25px;
+            font-size:12px;
+            color:#94a3b8;
+            text-align: center;
+            line-height:1.6;
+            padding: 15px;
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 10px;
+            border: 1px solid rgba(0, 102, 255, 0.2);
+        }
+
+        .helper-premium b {
+            color: var(--vibrant-cyan);
+        }
+
+        @media (max-width: 480px) {
+            .login-shell {
+                padding:20px 15px;
+            }
+            .login-card {
+                padding:30px 25px;
+            }
+            .brand-text-premium {
+                font-size: 26px;
+            }
+            .btn-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+            .btn-secondary {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-shell">
+        <div class="login-card">
+            <div class="brand-premium">
+                <div class="brand-icon-premium">SN</div>
+                <div class="brand-text-premium">CONDO-SAFE24</div>
+            </div>
+            <div class="brand-sub-premium">SISTEMA DE SEGURANÇA</div>
+
+            <div class="login-title">Acesso Administrativo</div>
+            <div class="login-subtitle">Acesso restrito à equipe de gestão e segurança</div>
+
+            <form method="post">
+                <label for="usuario">Usuário</label>
+                <input id="usuario" name="usuario" autocomplete="username" required placeholder="Digite seu usuário">
+
+                <label for="senha">Senha</label>
+                <input id="senha" name="senha" type="password" autocomplete="current-password" required placeholder="Digite sua senha">
+
+                {% if error %}
+                <div class="error-premium">{{ error }}</div>
+                {% endif %}
+
+                <div class="btn-row">
+                    <div class="clock-premium" id="clock"></div>
+                    <div style="display: flex; gap: 12px;">
+                        <button type="submit" class="btn-login">🔐 Entrar no Sistema</button>
+                        <button type="button" class="btn-login btn-secondary" onclick="window.location.href='/'">↶ Voltar</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="helper-premium">
+                Acesso liberado apenas para direção / coordenação. <br>
+                Credenciais configuradas no sistema administrativo.
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function updateClock(){
+        const el = document.getElementById('clock');
+        const now = new Date();
+        el.textContent = now.toLocaleTimeString('pt-BR',{hour12:false});
+    }
+    setInterval(updateClock,1000);
+    updateClock();
+    </script>
+</body>
+</html>
