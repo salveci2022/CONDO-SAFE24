@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>CONDO-SAFE24 — Acesso restrito</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#ff6a00">
+
+  <style>
+    body{
+      margin:0;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:radial-gradient(1200px 600px at 50% -200px,#111827,#020617);
+      font-family:Arial, Helvetica, sans-serif;
+      color:#f1f5f9;
+    }
+    .card{
+      background:#0b1220;
+      border:1px solid rgba(148,163,184,.2);
+      border-radius:18px;
+      padding:26px;
+      width:100%;
+      max-width:420px;
+      box-shadow:0 20px 60px rgba(0,0,0,.5);
+    }
+    h2{
+      margin:0 0 10px;
+      font-size:22px;
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    p{
+      margin:0 0 14px;
+      color:#cbd5e1;
+      font-size:14px;
+      line-height:1.4;
+    }
+    input{
+      width:100%;
+      padding:14px;
+      border-radius:12px;
+      border:1px solid #334155;
+      background:#020617;
+      color:#fff;
+      font-size:15px;
+      outline:none;
+    }
+    button{
+      width:100%;
+      margin-top:14px;
+      padding:14px;
+      border-radius:14px;
+      border:0;
+      background:#ff6a00;
+      color:#0b1020;
+      font-weight:800;
+      font-size:16px;
+      cursor:pointer;
+    }
+    button:hover{ opacity:.9; }
+    .hint{
+      margin-top:14px;
+      font-size:13px;
+      color:#94a3b8;
+      text-align:center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <h2>🔒 Acesso restrito</h2>
+
+    <p>
+      Para acessar o <strong>Botão de Pânico CONDO-SAFE24</strong>, informe a
+      <strong>chave oficial do seu condomínio</strong>.
+    </p>
+
+    <input id="keyInput" type="text" placeholder="Ex: CONDO-JARDINS-2026">
+
+    <button onclick="acessar()">Acessar sistema</button>
+
+    <div class="hint">
+      Caso não tenha a chave, solicite à portaria ou ao síndico.
+    </div>
+  </div>
+
+  <script>
+    function acessar(){
+      const key = document.getElementById("keyInput").value.trim();
+      if(!key){
+        alert("Informe a chave do condomínio.");
+        return;
+      }
+      window.location.href = "/sos?key=" + encodeURIComponent(key);
+    }
+  </script>
+</body>
+</html>
