@@ -431,5 +431,29 @@ function getSOSUrl(){
 }
 
 </script>
+
+<script>
+// === BLOQUEIO TOTAL DE NAVEGAÇÃO DO MORADOR (SOS FECHADO) ===
+const params = new URLSearchParams(window.location.search);
+const CURRENT_KEY = params.get("key");
+
+function getSOSUrl(){
+  return CURRENT_KEY ? `/sos?key=${encodeURIComponent(CURRENT_KEY)}` : `/sos`;
+}
+
+function sair(){
+  window.location.href = getSOSUrl();
+}
+
+function reiniciar(){
+  window.location.href = getSOSUrl();
+}
+
+function limpar(){
+  document.querySelectorAll("input, textarea").forEach(el => el.value = "");
+  window.history.replaceState({}, "", getSOSUrl());
+}
+</script>
+
 </body>
 </html>
