@@ -246,12 +246,19 @@ function limpar(){
   if (typeof gpsPromise !== 'undefined') gpsPromise = null;
 }
 
+function _selfSOS(){
+  // Mantém o morador sempre no SOS (com a key, se existir)
+  return window.location.pathname + window.location.search;
+}
+
 function reiniciar(){
-  window.location.reload();
+  // Recarrega permanecendo no próprio SOS (não vai para a Home)
+  window.location.href = _selfSOS();
 }
 
 function sair(){
-  window.location.href = '/';
+  // "Sair" aqui significa sair da ação e voltar para o próprio SOS
+  window.location.href = _selfSOS();
 }
 
 // GPS automático (híbrido)
@@ -431,29 +438,5 @@ function getSOSUrl(){
 }
 
 </script>
-
-<script>
-// === BLOQUEIO TOTAL DE NAVEGAÇÃO DO MORADOR (SOS FECHADO) ===
-const params = new URLSearchParams(window.location.search);
-const CURRENT_KEY = params.get("key");
-
-function getSOSUrl(){
-  return CURRENT_KEY ? `/sos?key=${encodeURIComponent(CURRENT_KEY)}` : `/sos`;
-}
-
-function sair(){
-  window.location.href = getSOSUrl();
-}
-
-function reiniciar(){
-  window.location.href = getSOSUrl();
-}
-
-function limpar(){
-  document.querySelectorAll("input, textarea").forEach(el => el.value = "");
-  window.history.replaceState({}, "", getSOSUrl());
-}
-</script>
-
 </body>
 </html>
