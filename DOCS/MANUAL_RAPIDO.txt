@@ -1,0 +1,18 @@
+CONDO-SAFE24 - Manual rapido
+
+MORADOR (SOS):
+1) Abra o link recebido: https://SEU-DOMINIO.onrender.com/sos?key=SUA_CHAVE
+2) Escolha a ocorrencia (isso ja ativa a localizacao automaticamente).
+3) Toque em ACIONAR SOS.
+4) Depois, use:
+   - Reiniciar (volta para o SOS)
+   - Limpar (limpa campos e fica no SOS)
+   - Sair (fica no SOS, sem abrir outros paineis)
+
+PORTARIA/CENTRAL:
+1) Acesse /login_central
+2) Entre e mantenha /central aberto para tocar sirene e ver mapa.
+
+SINDICO/ADMIN:
+1) /login_admin > /admin
+2) Gere a chave por condominio e entregue somente o link do SOS com ?key=...

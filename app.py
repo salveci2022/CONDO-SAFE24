@@ -39,29 +39,42 @@ def _ensure_data_dir():
     KEYS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
 def _load_keys():
-    # Retorna dict: {key: {name: str, active: bool}}
+    """Carrega as chaves.
+
+    IMPORTANTE (fix comercial):
+    - Se você definiu CONDO_KEYS_JSON no Render, ele NÃO pode bloquear as chaves
+      criadas pelo Admin (arquivo keys.json).
+    - Por isso, agora o sistema faz MERGE:
+        1) lê CONDO_KEYS_JSON (se existir)
+        2) lê data/keys.json (se existir)
+        3) junta tudo (o arquivo pode complementar/substituir o JSON do env)
+    """
+
+    out = {}
+
+    # 1) ENV (opcional)
     env_json = (os.environ.get('CONDO_KEYS_JSON') or '').strip()
     if env_json:
         try:
             data = __import__('json').loads(env_json)
-            out = {}
-            for k, v in (data or {}).items():
-                if isinstance(v, dict):
-                    out[str(k)] = {
-                        'name': str(v.get('name', 'Condomínio')).strip() or 'Condomínio',
-                        'active': bool(v.get('active', True)),
-                    }
-                else:
-                    out[str(k)] = {'name': str(v).strip() or 'Condomínio', 'active': True}
-            return out
+            if isinstance(data, dict):
+                for k, v in (data or {}).items():
+                    if isinstance(v, dict):
+                        out[str(k)] = {
+                            'name': str(v.get('name', 'Condomínio')).strip() or 'Condomínio',
+                            'active': bool(v.get('active', True)),
+                        }
+                    else:
+                        out[str(k)] = {'name': str(v).strip() or 'Condomínio', 'active': True}
         except Exception:
-            return {}
+            # Se o JSON do env estiver inválido, apenas ignora (não derruba o sistema)
+            pass
 
+    # 2) ARQUIVO (opcional)
     try:
         if KEYS_FILE.exists():
             data = __import__('json').loads(KEYS_FILE.read_text(encoding='utf-8'))
             if isinstance(data, dict):
-                out = {}
                 for k, v in data.items():
                     if isinstance(v, dict):
                         out[str(k)] = {
@@ -70,18 +83,20 @@ def _load_keys():
                         }
                     else:
                         out[str(k)] = {'name': str(v).strip() or 'Condomínio', 'active': True}
-                return out
     except Exception:
         pass
 
-    # Fallback seguro (evita SOS aberto): cria uma chave demo
-    _ensure_data_dir()
-    demo = {'DEMO-1234': {'name': 'DEMO', 'active': True}}
-    try:
-        KEYS_FILE.write_text(__import__('json').dumps(demo, ensure_ascii=False, indent=2), encoding='utf-8')
-    except Exception:
-        pass
-    return demo
+    # 3) Fallback seguro (evita SOS aberto)
+    if not out:
+        _ensure_data_dir()
+        demo = {'DEMO-1234': {'name': 'DEMO', 'active': True}}
+        try:
+            KEYS_FILE.write_text(__import__('json').dumps(demo, ensure_ascii=False, indent=2), encoding='utf-8')
+        except Exception:
+            pass
+        return demo
+
+    return out
 
 def _is_valid_client_key(key: str):
     if not key:
@@ -403,7 +418,8 @@ def create_key():
     name = (data.get('name') or 'Condomínio').strip()
     # gera uma chave simples, forte o bastante para uso comercial
     import secrets
-    new_key = 'COND-' + secrets.token_urlsafe(10).replace('-', '').replace('_', '')[:12].upper()
+    # Prefixo alinhado ao produto (mas chaves antigas continuam válidas)
+    new_key = 'CONDO-' + secrets.token_urlsafe(10).replace('-', '').replace('_', '')[:12].upper()
     keys = _load_keys()
     keys[new_key] = {'name': name, 'active': True}
     try:

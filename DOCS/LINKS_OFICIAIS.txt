@@ -1,0 +1,22 @@
+CONDO-SAFE24 — Links oficiais (por painel)
+
+BASE: https://condo-safe24.onrender.com
+
+1) MORADOR — Botao de Panico (SOS)
+- SOS (principal, com chave): /sos?key=SUA_CHAVE
+  Exemplo: https://condo-safe24.onrender.com/sos?key=SUA_CHAVE
+- SOS (sem chave): /sos  (mostra "Acesso restrito")
+
+2) PORTARIA/CENTRAL
+- Login Central: /login_central
+- Central (painel): /central
+
+3) HISTORICO / RELATORIOS (protegidos)
+- Historico: /painel_publico
+- PDF: /report.pdf
+
+4) ADMIN (seu controle)
+- Login Admin: /login_admin
+- Admin: /admin
+
+Observacao: Para o morador, use SEMPRE o link com ?key=... (cada condominio tem a sua chave).

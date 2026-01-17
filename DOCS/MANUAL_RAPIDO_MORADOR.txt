@@ -1,0 +1,20 @@
+MANUAL RAPIDO — MORADOR (CONDO-SAFE24)
+
+1) Abra o link do condominio (com chave):
+   https://SEU_DOMINIO/sos?key=SUA_CHAVE
+
+2) Escolha o tipo de ocorrencia.
+   Obs.: Ao escolher a ocorrencia, o sistema ja inicia a captura da localizacao (GPS).
+
+3) Clique no botao grande "ACIONAR SOS".
+   - A portaria recebe o alerta em tempo real.
+   - A localizacao e enviada junto com o mapa.
+
+Botoes:
+- Reiniciar: volta o SOS e mantem a chave.
+- Limpar: limpa os campos e mantem o SOS.
+- Sair: fecha o SOS e volta para o proprio SOS (seguranca).
+
+Importante:
+- Este sistema nao substitui Policia, Bombeiros ou SAMU.
+- Em risco imediato, ligue 190/193/192.
