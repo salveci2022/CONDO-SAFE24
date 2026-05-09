@@ -502,3 +502,17 @@ if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     debug = os.environ.get('FLASK_DEBUG','false').lower() == 'true'
     app.run(host='0.0.0.0', port=port, debug=debug)
+
+
+# ─────────────────────────────────────────────────────────
+#  ROTAS COMERCIAIS
+# ─────────────────────────────────────────────────────────
+@app.route('/landing')
+@app.route('/planos')
+@app.route('/vendas')
+def landing():
+    return render_template('landing.html')
+
+@app.route('/demo')
+def demo():
+    return render_template('demo.html')
