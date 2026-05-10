@@ -516,3 +516,151 @@ def landing():
 @app.route('/demo')
 def demo():
     return render_template('demo.html')
+
+
+# ─────────────────────────────────────────────────────────
+#  BANCO DE DADOS PERSISTENTE (SQLite)
+# ─────────────────────────────────────────────────────────
+from db import init_db, salvar_alerta, listar_alertas, resolver_alerta_db
+from db import limpar_alertas_db, stats_alertas, audit
+
+try:
+    init_db()
+    log.info("Banco de dados SQLite inicializado com sucesso.")
+except Exception as e:
+    log.warning(f"Banco SQLite indisponível, usando memória: {e}")
+
+# ─────────────────────────────────────────────────────────
+#  EXPORTAÇÃO EXCEL
+# ─────────────────────────────────────────────────────────
+@app.route('/export.xlsx')
+@require_central
+def export_excel():
+    try:
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
+        from io import BytesIO
+
+        try:
+            dados = listar_alertas()
+        except Exception:
+            dados = alertas
+
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Alertas CONDO-SAFE24"
+
+        # Estilos
+        hdr_font  = Font(bold=True, color="FFFFFF", name="Arial", size=11)
+        hdr_fill  = PatternFill("solid", fgColor="0066FF")
+        hdr_align = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        borda = Border(
+            left=Side(style="thin", color="CBD5E1"),
+            right=Side(style="thin", color="CBD5E1"),
+            top=Side(style="thin", color="CBD5E1"),
+            bottom=Side(style="thin", color="CBD5E1"),
+        )
+        alt_fill = PatternFill("solid", fgColor="EFF6FF")
+
+        # Cabeçalhos
+        cols = ["ID","Data/Hora","Tipo","Chamador","Localização","Descrição",
+                "Contato","Latitude","Longitude","Condomínio","Status","Maps"]
+        for ci, col in enumerate(cols, 1):
+            c = ws.cell(row=1, column=ci, value=col)
+            c.font = hdr_font; c.fill = hdr_fill
+            c.alignment = hdr_align; c.border = borda
+
+        ws.row_dimensions[1].height = 30
+        larguras = [6,18,18,18,20,30,16,12,12,18,10,35]
+        for i,w in enumerate(larguras, 1):
+            ws.column_dimensions[openpyxl.utils.get_column_letter(i)].width = w
+
+        # Dados
+        for ri, a in enumerate(dados, 2):
+            row_data = [
+                a.get('id',''), a.get('timestamp') or a.get('created_at',''),
+                a.get('type',''), a.get('caller',''), a.get('location',''),
+                a.get('description',''), a.get('contact',''),
+                a.get('lat',''), a.get('lng',''), a.get('client_name',''),
+                'Resolvido' if a.get('resolved') else 'Ativo',
+                a.get('maps_url',''),
+            ]
+            fill = alt_fill if ri % 2 == 0 else None
+            for ci, val in enumerate(row_data, 1):
+                c = ws.cell(row=ri, column=ci, value=val)
+                c.border = borda
+                c.alignment = Alignment(vertical="center", wrap_text=False)
+                if fill: c.fill = fill
+                if ci == 11:  # Status
+                    c.font = Font(
+                        color="15803D" if a.get('resolved') else "DC2626",
+                        bold=True, name="Arial"
+                    )
+
+        # Rodapé
+        now = datetime.now(TZ)
+        ws.append([])
+        ws.append([f"Gerado em: {now.strftime('%d/%m/%Y %H:%M:%S')} | CONDO-SAFE24 © SpyNet Tecnologia Forense | CNPJ 64.000.808/0001-51"])
+
+        buf = BytesIO()
+        wb.save(buf); buf.seek(0)
+        fname = f"condosafe24-alertas-{now.strftime('%Y%m%d-%H%M')}.xlsx"
+        return send_file(buf,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            as_attachment=True, download_name=fname)
+    except Exception as e:
+        log.exception("Erro ao gerar Excel")
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ─────────────────────────────────────────────────────────
+#  ANALYTICS / GRÁFICOS
+# ─────────────────────────────────────────────────────────
+@app.route('/api/analytics')
+@require_central
+def analytics():
+    try:
+        try:
+            s = stats_alertas()
+        except Exception:
+            total = len(alertas)
+            ativos = sum(1 for a in alertas if not a['resolved'])
+            from collections import Counter
+            tipos = Counter(a.get('type','') for a in alertas)
+            s = {
+                'total': total, 'ativos': ativos, 'resolvidos': total - ativos,
+                'por_tipo': [{'type': k, 'n': v} for k,v in tipos.most_common()],
+                'por_hora': [],
+            }
+        return jsonify({'ok': True, 'stats': s})
+    except Exception as e:
+        log.exception("Erro em /api/analytics")
+        return jsonify({'ok': False, 'error': str(e)}), 500
+
+# ─────────────────────────────────────────────────────────
+#  WEBHOOK Z-API WHATSAPP (configurável via ENV)
+# ─────────────────────────────────────────────────────────
+def _enviar_whatsapp(mensagem: str):
+    """Envia notificação WhatsApp via Z-API quando alerta é recebido."""
+    instance = os.environ.get('ZAPI_INSTANCE', '').strip()
+    token    = os.environ.get('ZAPI_TOKEN', '').strip()
+    phone    = os.environ.get('ZAPI_PHONE', '').strip()
+    if not all([instance, token, phone]):
+        return  # Z-API não configurado, ignora silenciosamente
+    try:
+        import urllib.request, json as _json
+        url = f"https://api.z-api.io/instances/{instance}/token/{token}/send-text"
+        payload = _json.dumps({"phone": phone, "message": mensagem}).encode()
+        req = urllib.request.Request(url, data=payload,
+            headers={"Content-Type": "application/json"}, method="POST")
+        urllib.request.urlopen(req, timeout=5)
+        log.info(f"WhatsApp enviado para {phone}")
+    except Exception as e:
+        log.warning(f"Falha ao enviar WhatsApp: {e}")
+
+# ─────────────────────────────────────────────────────────
+#  PAINEL DE ANALYTICS (página)
+# ─────────────────────────────────────────────────────────
+@app.route('/analytics')
+@require_central
+def analytics_page():
+    return render_template('analytics.html')
