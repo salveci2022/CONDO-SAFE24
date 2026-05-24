@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>CONDO-SAFE24 - Acesso Administrativo</title>
+    <title>CONDO-SAFE24 — Acesso Central de Monitoramento</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#ff6a00">
@@ -293,18 +293,15 @@
             </div>
             <div class="brand-sub-premium">SISTEMA DE SEGURANÇA</div>
 
-            <div class="login-title">Acesso Administrativo</div>
-            <div class="login-subtitle">Acesso restrito à equipe de gestão e segurança</div>
+            <div class="login-title">Central de Monitoramento</div>
+            <div class="login-subtitle">Acesso restrito à equipe de monitoramento e portaria</div>
 
             <form method="post">
-                <label for="usuario">Usuário</label>
-                <input id="usuario" name="usuario" autocomplete="username" required placeholder="Digite seu usuário">
-
-                <label for="senha">Senha</label>
+                <label for="senha">Senha de Acesso</label>
                 <input id="senha" name="senha" type="password" autocomplete="current-password" required placeholder="Digite sua senha">
 
-                {% if error %}
-                <div class="error-premium">{{ error }}</div>
+                {% if erro %}
+                <div class="error-premium">{{ erro }}</div>
                 {% endif %}
 
                 <div class="btn-row">
@@ -317,8 +314,7 @@
             </form>
 
             <div class="helper-premium">
-                Acesso liberado apenas para direção / coordenação. <br>
-                Credenciais configuradas no sistema administrativo.
+                Acesso exclusivo para portaria e equipe de monitoramento.<br>Credenciais fornecidas pelo administrador do condomínio.
             </div>
         </div>
     </div>

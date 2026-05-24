@@ -19,6 +19,7 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from collections import defaultdict
 from functools import wraps
+import hmac
 
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas as rl_canvas
@@ -100,6 +101,15 @@ def set_security_headers(resp):
     resp.headers['X-XSS-Protection']        = '1; mode=block'
     resp.headers['Referrer-Policy']         = 'strict-origin-when-cross-origin'
     resp.headers['Permissions-Policy']      = 'geolocation=(self)'
+    resp.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    resp.headers['Content-Security-Policy']   = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "connect-src 'self'; "
+        "img-src 'self' data:; "
+        "font-src 'self'"
+    )
     return resp
 
 
@@ -208,6 +218,10 @@ def require_admin(f):
 
 @app.route('/')
 def home():
+    return redirect(url_for('landing'))
+
+@app.route('/painel')
+def painel_home():
     return render_template('home.html')
 
 @app.route('/sos')
@@ -273,9 +287,7 @@ def login_central():
             return render_template('login_central.html', erro='Muitas tentativas. Aguarde alguns minutos.'), 429
         senha    = (request.form.get('senha') or request.form.get('password') or '').strip()
         expected = (os.environ.get('CENTRAL_PASSWORD') or '').strip()
-        if expected and senha != expected:
-            _record_login_failure(ip)
-            log.warning(f"Login Central falhou — IP: {ip}")
+        if expected and not hmac.compare_digest(senha.encode(), expected.encode()):
             return render_template('login_central.html', erro='Senha incorreta.')
         session.permanent = True
         session['central_auth'] = True
@@ -290,7 +302,7 @@ def login_admin():
             return render_template('login_admin.html', erro='Muitas tentativas. Aguarde alguns minutos.'), 429
         senha    = (request.form.get('senha') or request.form.get('password') or '').strip()
         expected = (os.environ.get('ADMIN_PASSWORD') or '').strip()
-        if expected and senha != expected:
+        if expected and not hmac.compare_digest(senha.encode(), expected.encode()):
             _record_login_failure(ip)
             log.warning(f"Login Admin falhou — IP: {ip}")
             return render_template('login_admin.html', erro='Senha incorreta.')
