@@ -311,7 +311,7 @@ function requestGPS(triggerLabel){
         if(info) info.textContent = `📍 Localização: OK (±${Math.round(acc)}m)`;
       }
       // Se já ficou bom, encerra rápido
-      if(best && best.accuracy <= 35){
+      if(best && best.accuracy <= 50){
         finish(best);
       }
     }
@@ -322,17 +322,17 @@ function requestGPS(triggerLabel){
     }
 
     try {
-      watchId = navigator.geolocation.watchPosition(accept, fail, { enableHighAccuracy:true, timeout:9000, maximumAge:0 });
+      watchId = navigator.geolocation.watchPosition(accept, fail, { enableHighAccuracy:true, timeout:15000, maximumAge:0 });
     } catch(e){
       // fallback
-      navigator.geolocation.getCurrentPosition(accept, fail, { enableHighAccuracy:true, timeout:9000, maximumAge:0 });
+      navigator.geolocation.getCurrentPosition(accept, fail, { enableHighAccuracy:true, timeout:15000, maximumAge:0 });
     }
 
     // fecha em até 4s com a melhor que tiver
     setTimeout(()=>{
       if(best) finish(best);
       else fail();
-    }, 4000);
+    }, 8000);
   });
 
   return gpsPromise;
