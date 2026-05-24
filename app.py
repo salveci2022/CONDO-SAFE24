@@ -12,6 +12,7 @@ from flask import (
     Flask, render_template, send_file, jsonify,
     request, redirect, url_for, session
 )
+from flask_wtf.csrf import CSRFProtect
 import os, json, time, secrets, logging
 from pathlib import Path
 from io import BytesIO
@@ -25,6 +26,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas as rl_canvas
 
 app = Flask(__name__)
+csrf = CSRFProtect(app)
 
 SECRET_KEY = os.environ.get('SECRET_KEY', '').strip()
 if not SECRET_KEY:
@@ -38,6 +40,8 @@ app.config.update(
     SESSION_COOKIE_SAMESITE='Lax',
     SESSION_COOKIE_SECURE=os.environ.get('FLASK_ENV') == 'production',
     PERMANENT_SESSION_LIFETIME=timedelta(hours=8),
+    WTF_CSRF_ENABLED=True,
+    WTF_CSRF_TIME_LIMIT=3600,
 )
 
 TZ = ZoneInfo(os.environ.get('APP_TZ', 'America/Sao_Paulo'))
@@ -334,6 +338,7 @@ def play_alarm():
 #  API — RECEBER ALERTA (v3.0 — separa identidade de ocorrência)
 # ════════════════════════════════════════════════════════════════════════════
 
+@csrf.exempt
 @app.route('/api/alert', methods=['POST'])
 def receber_alerta():
     ip = _get_ip()
@@ -520,6 +525,7 @@ def revelar_identidade_api():
 #  API — SIRENE, RESOLVER, LIMPAR
 # ════════════════════════════════════════════════════════════════════════════
 
+@csrf.exempt
 @app.route('/api/siren', methods=['POST'])
 @require_central
 def controlar_sirene():
@@ -537,6 +543,7 @@ def controlar_sirene():
     return jsonify({'ok': True, 'siren': sistema_status['sirene_ativa'],
                     'muted': sistema_status['mutado']})
 
+@csrf.exempt
 @app.route('/api/resolve', methods=['POST'])
 @require_central
 def resolver_alerta():
@@ -561,6 +568,7 @@ def resolver_alerta():
     sistema_status['ultima_atualizacao'] = datetime.now(TZ).isoformat()
     return jsonify({'ok': True})
 
+@csrf.exempt
 @app.route('/api/clear', methods=['POST'])
 @require_central
 def limpar_alertas():
@@ -576,6 +584,7 @@ def limpar_alertas():
     return jsonify({'ok': True})
 
 # Rota legada (compatibilidade)
+@csrf.exempt
 @app.route('/acionar_alerta', methods=['POST'])
 def acionar_alerta():
     client_key = _require_client_key()

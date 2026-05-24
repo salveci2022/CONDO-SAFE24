@@ -23,6 +23,7 @@
     <h1>🔒 Painel Administrativo — CONDO-SAFE24</h1>
     <p>Acesso restrito. SpyNet Tecnologia Forense.</p>
     <form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <input name="senha" type="password" placeholder="Senha do Admin" required>
       <button type="submit">Entrar</button>
       {% if erro %}<div class="err">❌ {{ erro }}</div>{% endif %}

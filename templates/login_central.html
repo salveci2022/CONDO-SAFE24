@@ -297,6 +297,7 @@
             <div class="login-subtitle">Acesso restrito à equipe de monitoramento e portaria</div>
 
             <form method="post">
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 <label for="senha">Senha de Acesso</label>
                 <input id="senha" name="senha" type="password" autocomplete="current-password" required placeholder="Digite sua senha">
 
