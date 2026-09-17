@@ -1,0 +1,66 @@
+══════════════════════════════════════════════════════════════════
+  CONDO-SAFE24 — VARIÁVEIS DE AMBIENTE PARA RAILWAY.APP
+  SpyNet Tecnologia Forense | CNPJ 64.000.808/0001-51
+══════════════════════════════════════════════════════════════════
+
+OBRIGATÓRIAS (sem estas o sistema não funciona em produção):
+─────────────────────────────────────────────────────────────────
+
+SECRET_KEY
+  Gere: python -c "import secrets; print(secrets.token_hex(32))"
+  Ex:   3f8a9c2d1e4b7f6a0c5d8e9b2a1f4c7d...
+
+CENTRAL_PASSWORD
+  Senha da equipe de monitoramento (central de segurança)
+  Ex:   Central@Condo2026
+
+ADMIN_PASSWORD
+  Senha do administrador do sistema
+  Ex:   Admin@SpyNet2026
+
+VAULT_ENCRYPTION_KEY
+  Chave AES-256 para cifrar dados pessoais — CRÍTICO
+  Gere: python -c "import secrets; print(secrets.token_hex(32))"
+  Ex:   a1b2c3d4e5f6...  (64 caracteres hexadecimais)
+  ⚠️  SEM ESTA CHAVE OS DADOS DO VAULT SÃO ILEGÍVEIS APÓS RESTART
+
+REVEAL_SECRET
+  Código especial para revelar identidade de moradores (admin)
+  Gere: python -c "import secrets; print(secrets.token_hex(16))"
+  Ex:   9f2e4a8b1c3d5e7f
+
+─────────────────────────────────────────────────────────────────
+RECOMENDADAS:
+─────────────────────────────────────────────────────────────────
+
+APP_TZ
+  Valor:  America/Sao_Paulo
+
+FLASK_ENV
+  Valor:  production
+
+IP_HASH_SALT
+  Gere:   python -c "import secrets; print(secrets.token_hex(16))"
+
+CONDO_KEYS_JSON
+  ⚠️  IMPORTANTE: O Railway tem disco efêmero — use esta variável
+  para não perder as chaves dos clientes a cada redeploy!
+  Formato: {"CONDO-XXXX":{"name":"Nome do Condomínio","active":true}}
+  Ex:      {"CONDO-ABC123":{"name":"Residencial Jardins","active":true},"CONDO-XYZ456":{"name":"Ed. Vitória","active":true}}
+
+─────────────────────────────────────────────────────────────────
+OPCIONAIS (WhatsApp Z-API):
+─────────────────────────────────────────────────────────────────
+
+ZAPI_INSTANCE    → ID da instância Z-API
+ZAPI_TOKEN       → Token da instância Z-API
+ZAPI_PHONE       → Número com DDI: 5561993962090
+
+══════════════════════════════════════════════════════════════════
+COMO CONFIGURAR NO RAILWAY:
+  1. Abra o projeto no railway.app
+  2. Clique na aba "Variables"
+  3. Clique "New Variable"
+  4. Adicione cada variável acima
+  5. Faça o Redeploy
+══════════════════════════════════════════════════════════════════
